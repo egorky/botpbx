@@ -206,7 +206,7 @@ export class ContactRepository {
     const existing = await this.findById(id, tenantId);
     if (!existing) return null;
 
-    const fields: string[] = ['updated_at = NOW()'];
+    const fields: string[] = ['updated_at = EXTRACT(EPOCH FROM NOW())::INTEGER'];
     const values: any[] = [];
     let paramIndex = 1;
 

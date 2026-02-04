@@ -232,9 +232,9 @@ export class DialerCampaignRepository {
     let paramIndex = 2;
 
     if (status === 'running') {
-      updates.push('started_at = NOW()');
+      updates.push('started_at = EXTRACT(EPOCH FROM NOW())::INTEGER');
     } else if (status === 'completed') {
-      updates.push('completed_at = NOW()');
+      updates.push('completed_at = EXTRACT(EPOCH FROM NOW())::INTEGER');
     }
 
     let query = `UPDATE dialer_campaigns SET ${updates.join(', ')} WHERE id = $${paramIndex++}`;
