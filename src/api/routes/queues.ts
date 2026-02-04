@@ -91,6 +91,9 @@ export function registerQueueRoutes(server: FastifyInstance, ctx: ApiContext): v
       ctx.queueAnnouncementService.prewarmCache(queue.id).catch(() => {});
     }
 
+    // Reload Asterisk queues
+    await ctx.reloadAsteriskQueues();
+
     return reply.status(201).send(queue);
   });
 
@@ -175,6 +178,9 @@ export function registerQueueRoutes(server: FastifyInstance, ctx: ApiContext): v
       }
     }
 
+    // Reload Asterisk queues
+    await ctx.reloadAsteriskQueues();
+
     return queue;
   });
 
@@ -188,6 +194,9 @@ export function registerQueueRoutes(server: FastifyInstance, ctx: ApiContext): v
     if (!deleted) {
       return reply.status(404).send({ error: 'Not Found', message: 'Queue not found' });
     }
+
+    // Reload Asterisk queues
+    await ctx.reloadAsteriskQueues();
 
     return { success: true };
   });
@@ -234,6 +243,9 @@ export function registerQueueRoutes(server: FastifyInstance, ctx: ApiContext): v
       return reply.status(400).send({ error: 'Bad Request', message: 'Failed to add member (may already exist)' });
     }
 
+    // Reload Asterisk queues
+    await ctx.reloadAsteriskQueues();
+
     return reply.status(201).send(member);
   });
 
@@ -248,6 +260,9 @@ export function registerQueueRoutes(server: FastifyInstance, ctx: ApiContext): v
     if (!removed) {
       return reply.status(404).send({ error: 'Not Found', message: 'Member not found' });
     }
+
+    // Reload Asterisk queues
+    await ctx.reloadAsteriskQueues();
 
     return { success: true };
   });
@@ -264,6 +279,9 @@ export function registerQueueRoutes(server: FastifyInstance, ctx: ApiContext): v
       return reply.status(404).send({ error: 'Not Found', message: 'Member not found in queue' });
     }
 
+    // Reload Asterisk queues
+    await ctx.reloadAsteriskQueues();
+
     return { success: true, paused: true };
   });
 
@@ -278,6 +296,9 @@ export function registerQueueRoutes(server: FastifyInstance, ctx: ApiContext): v
     if (!unpaused) {
       return reply.status(404).send({ error: 'Not Found', message: 'Member not found in queue' });
     }
+
+    // Reload Asterisk queues
+    await ctx.reloadAsteriskQueues();
 
     return { success: true, paused: false };
   });
@@ -298,6 +319,9 @@ export function registerQueueRoutes(server: FastifyInstance, ctx: ApiContext): v
     if (!updated) {
       return reply.status(404).send({ error: 'Not Found', message: 'Member not found in queue' });
     }
+
+    // Reload Asterisk queues
+    await ctx.reloadAsteriskQueues();
 
     return { success: true, penalty: body.penalty };
   });

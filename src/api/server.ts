@@ -131,6 +131,7 @@ export interface ApiContext {
   asteriskConfigService: any;
   reloadAsteriskPJSIP: () => Promise<void>;
   reloadAsteriskDialplan: () => Promise<void>;
+  reloadAsteriskQueues: () => Promise<void>;
   contactGroupRepo: ContactGroupRepository;
   queueAnnouncementService: QueueAnnouncementService | null;
   teamRepo: TeamRepository;
@@ -282,6 +283,21 @@ export async function createApiServer(
     }
   };
 
+  // Function to reload queues after changes
+  const reloadAsteriskQueues = async () => {
+    try {
+      // Regenerate queues config
+      await asteriskConfigService.writeQueuesConf();
+
+      // Reload Asterisk queues if AMI is connected
+      if (amiClient && amiClient.isConnected()) {
+        await amiClient.action('Command', { Command: 'module reload app_queue.so' });
+      }
+    } catch (error) {
+      console.error('Failed to reload Asterisk queues:', error);
+    }
+  };
+
   // Queue announcement service
   const queueAnnouncementService = new QueueAnnouncementService(ttsService, queueRepo);
 
@@ -361,6 +377,7 @@ export async function createApiServer(
     asteriskConfigService,
     reloadAsteriskPJSIP,
     reloadAsteriskDialplan,
+    reloadAsteriskQueues,
     contactGroupRepo,
     queueAnnouncementService,
     teamRepo,
