@@ -6,6 +6,7 @@ import { logger } from '../utils/logger';
 import { Extension, SIPTrunk } from '../models/types';
 import { ExtensionRepository } from '../db/repositories/extensionRepository';
 import { TrunkRepository } from '../db/repositories/trunkRepository';
+import { QueueRepository } from '../db/repositories/queueRepository';
 
 const dnsLookup = promisify(dns.lookup);
 
@@ -13,11 +14,25 @@ export class AsteriskConfigService {
   private configPath: string;
   private extensionRepo: ExtensionRepository;
   private trunkRepo: TrunkRepository | null = null;
+  private queueRepo: QueueRepository | null = null;
 
-  constructor(configPath: string, extensionRepo: ExtensionRepository, trunkRepo?: TrunkRepository) {
+  constructor(
+    configPath: string,
+    extensionRepo: ExtensionRepository,
+    trunkRepo?: TrunkRepository,
+    queueRepo?: QueueRepository
+  ) {
     this.configPath = configPath;
     this.extensionRepo = extensionRepo;
     this.trunkRepo = trunkRepo || null;
+    this.queueRepo = queueRepo || null;
+  }
+
+  /**
+   * Set the queue repository
+   */
+  setQueueRepo(queueRepo: QueueRepository): void {
+    this.queueRepo = queueRepo;
   }
 
   /**
@@ -888,6 +903,82 @@ eventfilter=!Event: RTCPReceived
   }
 
   /**
+   * Generate queues.conf content
+   */
+  async generateQueuesConf(): Promise<string> {
+    if (!this.queueRepo) {
+      return '; No queue repository configured\n';
+    }
+
+    const queues = await this.queueRepo.findAllEnabled();
+
+    let config = `; ===============================================
+; BotPBX Auto-Generated Queues Configuration
+; Generated: ${new Date().toISOString()}
+; DO NOT EDIT MANUALLY - Changes will be overwritten
+; ===============================================
+
+[general]
+persistentmembers=yes
+monitor-type=MixMonitor
+
+`;
+
+    for (const queue of queues) {
+      // Use queue ID as the unique queue name
+      config += `[${queue.id}]
+strategy=${queue.strategy}
+timeout=${queue.timeoutSeconds}
+retry=${queue.retrySeconds}
+maxlen=${queue.maxWaitTime > 0 ? 0 : 0}
+wrapuptime=0
+joinempty=yes
+leavewhenempty=no
+ringinuse=no
+announce-frequency=${queue.announceFrequency}
+announce-position=${queue.announcePosition ? 'yes' : 'no'}
+music=default
+`;
+
+      // Add static members (dynamic members are handled by AddQueueMember in dialplan/AMI)
+      if (queue.members && queue.members.length > 0) {
+        for (const member of queue.members) {
+          if (!member.paused) {
+            // Add member with penalty
+            // Format: member => interface,penalty,membername,state_interface,ringinuse
+            // We use PJSIP/extension as interface
+            config += `member => PJSIP/${member.extensionNumber},${member.penalty}\n`;
+          }
+        }
+      }
+      config += '\n';
+    }
+
+    return config;
+  }
+
+  /**
+   * Write queues.conf
+   */
+  async writeQueuesConf(): Promise<boolean> {
+    const configContent = await this.generateQueuesConf();
+    const filePath = path.join(this.configPath, 'queues.conf');
+
+    try {
+      if (fs.existsSync(filePath)) {
+        const backupPath = `${filePath}.bak`;
+        fs.copyFileSync(filePath, backupPath);
+      }
+      fs.writeFileSync(filePath, configContent);
+      logger.info(`Queues config written to: ${filePath}`);
+      return true;
+    } catch (error) {
+      logger.error(`Failed to write queues.conf: ${(error as Error).message}`);
+      return false;
+    }
+  }
+
+  /**
    * Write all Asterisk config files (called at startup)
    */
   async writeAllConfigs(): Promise<void> {
@@ -900,10 +991,11 @@ eventfilter=!Event: RTCPReceived
     // Write main pjsip.conf if it doesn't exist
     await this.writePJSIPMainConfig();
 
-    // Write auto-generated configs (extensions and trunks)
+    // Write auto-generated configs (extensions, trunks, queues)
     await this.writePJSIPConfig();
     await this.writeTrunkConfig();
     await this.writeHttpConf();
+    await this.writeQueuesConf();
 
     // Write extensions.conf
     await this.writeExtensionsConf();

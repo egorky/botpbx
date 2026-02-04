@@ -92,7 +92,7 @@ async function main(): Promise<void> {
       piperVoice
     );
     const audioService = new AudioService(config.audioFilesPath);
-    const asteriskConfigService = new AsteriskConfigService(config.asteriskConfigPath, extensionRepo, trunkRepo);
+    const asteriskConfigService = new AsteriskConfigService(config.asteriskConfigPath, extensionRepo, trunkRepo, queueRepo);
     logger.info('Services initialized');
 
     // Get AI API keys from settings

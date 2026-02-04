@@ -248,7 +248,8 @@ export async function createApiServer(
   const asteriskConfigService = new AsteriskConfigService(
     process.env.ASTERISK_CONFIG_PATH || '/etc/asterisk',
     extensionRepo,
-    trunkRepo
+    trunkRepo,
+    queueRepo
   );
 
   // Function to reload PJSIP after extension changes
@@ -281,8 +282,8 @@ export async function createApiServer(
     }
   };
 
-  // Queue announcement service (null if not needed)
-  const queueAnnouncementService: QueueAnnouncementService | null = null;
+  // Queue announcement service
+  const queueAnnouncementService = new QueueAnnouncementService(ttsService, queueRepo);
 
   // Permission middleware factory - checks if user has required permission
   // Removed local definition to use the one from ctx context or defined later if needed
