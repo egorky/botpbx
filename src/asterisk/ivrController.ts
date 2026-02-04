@@ -485,19 +485,6 @@ export class IVRController {
   }
 
   /**
-   * Play campaign closed message
-   */
-  private async playClosed(agi: AGIConnection): Promise<void> {
-    // Try to play a system "closed" prompt
-    try {
-      await agi.streamFile('vm-goodbye');
-    } catch {
-      // Ignore if file doesn't exist
-    }
-    await agi.hangup();
-  }
-
-  /**
    * Play invalid/error message
    */
   private async playInvalid(agi: AGIConnection): Promise<void> {
