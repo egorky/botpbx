@@ -59,7 +59,7 @@ export interface Prompt {
 export interface RoutingRule {
   id: string;
   did: string;
-  targetType: 'ivr_menu' | 'extension' | 'queue' | 'ring_group';
+  targetType: 'ivr_menu' | 'extension' | 'queue' | 'ring_group' | 'ai_agent';
   targetId: string;
   enabled: boolean;
   createdAt: number;

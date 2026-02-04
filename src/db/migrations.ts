@@ -1309,6 +1309,15 @@ const migrations: Migration[] = [
     up: `
       ALTER TABLE dialer_campaigns ADD COLUMN IF NOT EXISTS trunk_id TEXT REFERENCES sip_trunks(id) ON DELETE SET NULL;
     `
+  },
+  {
+    version: 33,
+    name: 'add_ai_agent_routing_target',
+    up: `
+      ALTER TABLE routing_rules DROP CONSTRAINT IF EXISTS routing_rules_target_type_check;
+      ALTER TABLE routing_rules ADD CONSTRAINT routing_rules_target_type_check
+        CHECK(target_type IN ('ivr_menu', 'extension', 'queue', 'ring_group', 'ai_agent'));
+    `
   }
 ];
 

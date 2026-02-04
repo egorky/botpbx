@@ -194,6 +194,10 @@ export class IVRController {
         case 'queue':
           await this.transferToQueue(agi, routing.targetId, callState);
           break;
+
+        case 'ai_agent':
+          await this.transferToAIAgent(agi, routing.targetId, callState);
+          break;
       }
 
     } catch (error) {
@@ -482,6 +486,29 @@ export class IVRController {
     });
 
     await agi.exec('Queue', queueName);
+  }
+
+  /**
+   * Transfer to AI Agent
+   */
+  private async transferToAIAgent(
+    agi: AGIConnection,
+    agentId: string,
+    callState: CallState
+  ): Promise<void> {
+    agiLogger.info(`Transferring to AI Agent: ${agentId}`);
+    await this.updateCallLog(callState, {
+      finalDestination: `ai_agent:${agentId}`,
+      disposition: 'TRANSFERRED_TO_AI',
+    });
+
+    // Set AGENT_ID variable for the AI Agent handler
+    await agi.setVariable('AGENT_ID', agentId);
+
+    // Hand off to the AI Agent AGI script
+    // We use the AGI_PORT from environment or default to 4573
+    const agiPort = process.env.AGI_SERVER_PORT || 4573;
+    await agi.exec('AGI', `agi://127.0.0.1:${agiPort}/ai-agent`);
   }
 
   /**
