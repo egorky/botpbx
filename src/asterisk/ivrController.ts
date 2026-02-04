@@ -153,14 +153,6 @@ export class IVRController {
         return;
       }
 
-      // Check if campaign is active
-      if (!(await this.settingsRepo.isCampaignActive())) {
-        agiLogger.info(`Campaign inactive, playing closed message for ${session.uniqueId}`);
-        await this.playClosed(agi);
-        await this.updateCallLog(callState, { disposition: 'CAMPAIGN_CLOSED' });
-        return;
-      }
-
       // Find routing rule for this DID
       let routing = await this.routingRepo.findEnabledByDID(session.dnid);
 
