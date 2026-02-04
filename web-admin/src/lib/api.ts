@@ -26,7 +26,7 @@ import type {
   SystemStatusResponse,
   AuditLogsResponse,
 } from '@/types/api';
-import type { Extension, Trunk, IVRMenu, IVROption, RoutingRule, Campaign, User } from '@/types/models';
+import type { Extension, Trunk, IVRMenu, IVROption, RoutingRule, Campaign, User, AIAgent } from '@/types/models';
 
 // Auto-detect API URL based on browser location
 // Frontend runs on port 3001, backend on port 3000
@@ -2422,6 +2422,45 @@ export const aiConversationsApi = {
   // Get single conversation with turns
   get: async (id: string): Promise<{ success: boolean; data: unknown }> => {
     return apiFetch(`/api/v1/ai/conversations/${id}`);
+  },
+};
+
+// ============================================
+// AI Agents API
+// ============================================
+
+export const aiAgentsApi = {
+  list: async (): Promise<{ success: boolean; data: AIAgent[] }> => {
+    return apiFetch('/api/v1/ai/agents');
+  },
+
+  get: async (id: string): Promise<{ success: boolean; data: AIAgent }> => {
+    return apiFetch(`/api/v1/ai/agents/${id}`);
+  },
+
+  create: async (data: Partial<AIAgent>): Promise<{ success: boolean; data: AIAgent }> => {
+    return apiFetch('/api/v1/ai/agents', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (id: string, data: Partial<AIAgent>): Promise<{ success: boolean; data: AIAgent }> => {
+    return apiFetch(`/api/v1/ai/agents/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiFetch(`/api/v1/ai/agents/${id}`, { method: 'DELETE', body: '{}' });
+  },
+
+  testCall: async (agentId: string, phoneNumber: string, trunkId?: string): Promise<void> => {
+    await apiFetch('/api/v1/ai/calls/outbound', {
+      method: 'POST',
+      body: JSON.stringify({ agentId, phoneNumber, trunkId }),
+    });
   },
 };
 

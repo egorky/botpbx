@@ -19,8 +19,9 @@ import {
   GripVertical,
   Search,
   HelpCircle,
+  Bot,
 } from 'lucide-react';
-import { ivrApi, extensionsApi, ringGroupsApi, queuesApi, outboundRoutesApi, trunksApi, OutboundRoute } from '@/lib/api';
+import { ivrApi, extensionsApi, ringGroupsApi, queuesApi, outboundRoutesApi, trunksApi, aiAgentsApi, OutboundRoute } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -44,7 +45,7 @@ import {
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import type { RoutingRule, IVRMenu, Extension } from '@/types/models';
+import type { RoutingRule, IVRMenu, Extension, AIAgent } from '@/types/models';
 import type { RingGroup } from '@/lib/api';
 
 const targetTypeLabels: Record<string, string> = {
@@ -52,6 +53,7 @@ const targetTypeLabels: Record<string, string> = {
   extension: 'Extension',
   ring_group: 'Ring Group',
   call_queue: 'Call Queue',
+  ai_agent: 'AI Agent',
 };
 
 const targetTypeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -59,6 +61,7 @@ const targetTypeIcons: Record<string, React.ComponentType<{ className?: string }
   extension: Users,
   ring_group: UsersRound,
   call_queue: ListOrdered,
+  ai_agent: Bot,
 };
 
 const patternExamples = [
@@ -104,6 +107,7 @@ export default function RoutesPage() {
   const { data: extensionsData } = useQuery({ queryKey: ['extensions'], queryFn: extensionsApi.list });
   const { data: ringGroupsData } = useQuery({ queryKey: ['ring-groups'], queryFn: ringGroupsApi.list });
   const { data: queuesData } = useQuery({ queryKey: ['queues'], queryFn: queuesApi.list });
+  const { data: aiAgentsData } = useQuery({ queryKey: ['ai-agents'], queryFn: aiAgentsApi.list });
   const { data: outboundData, isLoading: outboundLoading } = useQuery({ queryKey: ['outbound-routes'], queryFn: outboundRoutesApi.list });
   const { data: trunksData } = useQuery({ queryKey: ['trunks'], queryFn: trunksApi.list });
 
@@ -175,6 +179,7 @@ export default function RoutesPage() {
       case 'extension': return extensionsData?.extensions || [];
       case 'ring_group': return ringGroupsData?.ringGroups || [];
       case 'call_queue': return queuesData?.queues || [];
+      case 'ai_agent': return aiAgentsData?.data || [];
       default: return [];
     }
   };
@@ -185,6 +190,7 @@ export default function RoutesPage() {
       case 'extension': const ext = extensionsData?.extensions.find((e: Extension) => e.id === rule.targetId || e.number === rule.targetId); return ext ? `${ext.number} - ${ext.name}` : rule.targetId;
       case 'ring_group': return ringGroupsData?.ringGroups.find((g: RingGroup) => g.id === rule.targetId)?.name || rule.targetId;
       case 'call_queue': return queuesData?.queues.find((q: any) => q.id === rule.targetId)?.name || rule.targetId;
+      case 'ai_agent': return aiAgentsData?.data?.find((a: AIAgent) => a.id === rule.targetId)?.name || rule.targetId;
       default: return rule.targetId;
     }
   };
@@ -287,7 +293,7 @@ export default function RoutesPage() {
         <DialogContent><DialogHeader><DialogTitle>{selectedInboundRule ? 'Edit' : 'New'} Inbound Route</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmitInbound} className="space-y-4">
             <div className="space-y-2"><Label>DID *</Label><Input value={inboundFormDid} onChange={(e) => setInboundFormDid(e.target.value)} placeholder="+1234567890 or _." required /><p className="text-xs text-muted-foreground">Use _. for catch-all</p></div>
-            <div className="space-y-2"><Label>Target Type *</Label><select value={inboundFormTargetType} onChange={(e) => { setInboundFormTargetType(e.target.value); setInboundFormTargetId(''); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"><option value="ivr_menu">IVR Menu</option><option value="extension">Extension</option><option value="ring_group">Ring Group</option><option value="call_queue">Call Queue</option></select></div>
+            <div className="space-y-2"><Label>Target Type *</Label><select value={inboundFormTargetType} onChange={(e) => { setInboundFormTargetType(e.target.value); setInboundFormTargetId(''); }} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"><option value="ivr_menu">IVR Menu</option><option value="extension">Extension</option><option value="ring_group">Ring Group</option><option value="call_queue">Call Queue</option><option value="ai_agent">AI Agent</option></select></div>
             <div className="space-y-2"><Label>Destination *</Label><select value={inboundFormTargetId} onChange={(e) => setInboundFormTargetId(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"><option value="">Select</option>{targetOptions.map((o: any) => <option key={o.id || o.number} value={o.id || o.number}>{inboundFormTargetType === 'extension' ? `${o.number} - ${o.name}` : o.name}</option>)}</select></div>
             <div className="flex items-center gap-2"><input type="checkbox" checked={inboundFormEnabled} onChange={(e) => setInboundFormEnabled(e.target.checked)} className="h-4 w-4" /><Label className="font-normal">Enabled</Label></div>
             <DialogFooter><Button type="button" variant="outline" onClick={handleCloseInboundDialog}>Cancel</Button><Button type="submit" disabled={!inboundFormTargetId}>{selectedInboundRule ? 'Save' : 'Create'}</Button></DialogFooter>

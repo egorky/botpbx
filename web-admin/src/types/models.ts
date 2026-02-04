@@ -105,11 +105,30 @@ export interface Prompt {
 export interface RoutingRule {
   id: string;
   did: string;
-  targetType: 'ivr_menu' | 'extension' | 'queue' | 'ring_group' | 'call_queue';
+  targetType: 'ivr_menu' | 'extension' | 'queue' | 'ring_group' | 'call_queue' | 'ai_agent';
   targetId: string;
   enabled: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AIAgent {
+  id: string;
+  name: string;
+  systemPrompt: string;
+  greetingText: string;
+  voice: string;
+  language: string;
+  enabledFunctions: string[];
+  enabled: boolean;
+  flowEnabled: number;
+  createdAt: number;
+  voiceProvider?: 'openai_realtime' | 'elevenlabs_full';
+  elevenLabsVoiceId?: string;
+  elevenLabsVoiceName?: string;
+  elevenLabsModel?: string;
+  llmProvider?: string;
+  llmModel?: string;
 }
 
 export type CampaignHandlerType = 'ivr' | 'ai_agent' | 'ring_group' | 'extension';
