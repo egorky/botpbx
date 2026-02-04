@@ -422,7 +422,7 @@ export class QueueRepository {
     try {
       await this.db.run(
         `INSERT INTO queue_members (id, queue_id, extension_number, penalty, paused, created_at)
-         VALUES ($1, $2, $3, $4, 0, $5)`,
+         VALUES ($1, $2, $3, $4, false, $5)`,
         [id, queueId, extensionNumber, penalty, createdAt]
       );
 
@@ -505,7 +505,7 @@ export class QueueRepository {
         const memberCreatedAt = Math.floor(Date.now() / 1000);
         await this.db.run(
           `INSERT INTO queue_members (id, queue_id, extension_number, penalty, paused, created_at)
-           VALUES ($1, $2, $3, $4, 0, $5)`,
+           VALUES ($1, $2, $3, $4, false, $5)`,
           [id, queueId, member.extensionNumber, member.penalty, memberCreatedAt]
         );
       }
