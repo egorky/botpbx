@@ -144,7 +144,7 @@ export function registerAITemplateRoutes(server: FastifyInstance, ctx: ApiContex
         voice,
         JSON.stringify(enabledFunctions),
         icon,
-        0, // User-created templates are not default
+        false, // User-created templates are not default
       ]);
 
       return reply.status(201).send({
@@ -212,8 +212,8 @@ export function registerAITemplateRoutes(server: FastifyInstance, ctx: ApiContex
         'gpt-4o-realtime',
         'openai_realtime',
         JSON.stringify(enabledFunctions),
-        1,  // enabled: INTEGER boolean
-        1,  // use_realtime: INTEGER boolean
+        true,  // enabled: INTEGER boolean
+        true,  // use_realtime: INTEGER boolean
         createdAt
       ]);
 

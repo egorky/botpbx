@@ -739,7 +739,7 @@ const migrations: Migration[] = [
       -- Update defaults (use PostgreSQL boolean syntax)
       ALTER TABLE ai_agents ALTER COLUMN voice_provider SET DEFAULT 'openai_realtime';
       ALTER TABLE ai_agents ALTER COLUMN stt_provider SET DEFAULT 'openai_realtime';
-      ALTER TABLE ai_agents ALTER COLUMN use_realtime SET DEFAULT 1;
+      ALTER TABLE ai_agents ALTER COLUMN use_realtime SET DEFAULT true;
     `
   },
   {
