@@ -198,7 +198,7 @@ export class CampaignContactRepository {
          OR (
            status IN ('no_answer', 'busy')
            AND attempts < $2
-           AND (last_attempt_at IS NULL OR last_attempt_at + INTERVAL '${retryDelaySecs} seconds' < NOW())
+           AND (last_attempt_at IS NULL OR last_attempt_at < EXTRACT(EPOCH FROM (NOW() - INTERVAL '${retryDelaySecs} seconds'))::INTEGER)
          )
        )
        ORDER BY attempts ASC, created_at ASC
@@ -230,11 +230,11 @@ export class CampaignContactRepository {
 
     if (status === 'dialing') {
       updates.push('attempts = attempts + 1');
-      updates.push('last_attempt_at = NOW()');
+      updates.push('last_attempt_at = EXTRACT(EPOCH FROM NOW())::INTEGER');
     }
 
     if (status === 'answered' || status === 'press1' || status === 'connected') {
-      updates.push('answered_at = NOW()');
+      updates.push('answered_at = EXTRACT(EPOCH FROM NOW())::INTEGER');
     }
 
     if (callLogId) {
