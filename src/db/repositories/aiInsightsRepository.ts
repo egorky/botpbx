@@ -251,7 +251,6 @@ export class AIInsightsRepository {
       await this.db.run(`
         UPDATE ai_insights
         SET data = $1, generated_at = EXTRACT(EPOCH FROM NOW())::INTEGER
-        SET data = $1, generated_at = EXTRACT(EPOCH FROM NOW())::INTEGER
         WHERE id = $2
       `, [JSON.stringify(data), existing.id]);
 

@@ -226,7 +226,7 @@ export function registerIvrRoutes(server: FastifyInstance, ctx: ApiContext): voi
 
     const rule = await ctx.routingRepo.create({
       did: body.did,
-      targetType: body.targetType as any,
+      targetType: (body.targetType === 'call_queue' ? 'queue' : body.targetType) as any,
       targetId: body.targetId,
       enabled: body.enabled !== false,
     });
@@ -251,7 +251,12 @@ export function registerIvrRoutes(server: FastifyInstance, ctx: ApiContext): voi
       return reply.status(404).send({ error: 'Not Found', message: 'Routing rule not found' });
     }
 
-    const success = await ctx.routingRepo.update(id, body as any);
+    const updates = { ...body };
+    if (updates.targetType === 'call_queue') {
+      updates.targetType = 'queue';
+    }
+
+    const success = await ctx.routingRepo.update(id, updates as any);
     if (!success) {
       return reply.status(500).send({ error: 'Server Error', message: 'Failed to update rule' });
     }
