@@ -126,7 +126,7 @@ export class CallRecordingRepository {
   async complete(id: string, durationSeconds: number, fileSize?: number): Promise<void> {
     await this.db.run(`
       UPDATE call_recordings
-      SET status = 'completed', duration_seconds = $1, file_size = $2, completed_at = NOW()
+      SET status = 'completed', duration_seconds = $1, file_size = $2, completed_at = EXTRACT(EPOCH FROM NOW())::INTEGER
       WHERE id = $3
     `, [durationSeconds, fileSize || null, id]);
   }

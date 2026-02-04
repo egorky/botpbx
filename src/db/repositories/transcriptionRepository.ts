@@ -338,7 +338,7 @@ export class TranscriptionRepository {
   async markJobProcessing(id: string): Promise<void> {
     await this.db.run(`
       UPDATE transcription_jobs
-      SET status = 'processing', started_at = NOW(), attempts = attempts + 1
+      SET status = 'processing', started_at = EXTRACT(EPOCH FROM NOW())::INTEGER, attempts = attempts + 1
       WHERE id = $1
     `, [id]);
   }
@@ -346,7 +346,7 @@ export class TranscriptionRepository {
   async markJobCompleted(id: string, transcriptionId: string): Promise<void> {
     await this.db.run(`
       UPDATE transcription_jobs
-      SET status = 'completed', completed_at = NOW(), transcription_id = $1
+      SET status = 'completed', completed_at = EXTRACT(EPOCH FROM NOW())::INTEGER, transcription_id = $1
       WHERE id = $2
     `, [transcriptionId, id]);
     dbLogger.info(`Transcription job completed: ${id}`);
@@ -361,7 +361,7 @@ export class TranscriptionRepository {
 
     await this.db.run(`
       UPDATE transcription_jobs
-      SET status = $1, error_message = $2, completed_at = CASE WHEN $1 = 'failed' THEN NOW() ELSE NULL END
+      SET status = $1, error_message = $2, completed_at = CASE WHEN $1 = 'failed' THEN EXTRACT(EPOCH FROM NOW())::INTEGER ELSE NULL END
       WHERE id = $3
     `, [newStatus, errorMessage, id]);
 
@@ -397,7 +397,7 @@ export class TranscriptionRepository {
     const result = await this.db.run(`
       DELETE FROM transcription_jobs
       WHERE status = 'completed'
-        AND completed_at < NOW() - INTERVAL '${daysOld} days'
+        AND completed_at < EXTRACT(EPOCH FROM (NOW() - INTERVAL '${daysOld} days'))::INTEGER
     `);
     return result.rowCount;
   }

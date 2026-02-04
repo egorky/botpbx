@@ -158,7 +158,7 @@ export class RecordingRepository {
   }): Promise<boolean> {
     const result = await this.db.run(
       `UPDATE call_recordings
-       SET status = 'completed', file_size = $1, duration_seconds = $2, completed_at = NOW()
+       SET status = 'completed', file_size = $1, duration_seconds = $2, completed_at = EXTRACT(EPOCH FROM NOW())::INTEGER
        WHERE id = $3`,
       [data.fileSize, data.durationSeconds, id]
     );
@@ -171,7 +171,7 @@ export class RecordingRepository {
 
   async markFailed(id: string): Promise<boolean> {
     const result = await this.db.run(
-      `UPDATE call_recordings SET status = 'failed', completed_at = NOW() WHERE id = $1`,
+      `UPDATE call_recordings SET status = 'failed', completed_at = EXTRACT(EPOCH FROM NOW())::INTEGER WHERE id = $1`,
       [id]
     );
     return result.rowCount > 0;
@@ -192,7 +192,7 @@ export class RecordingRepository {
 
   async deleteOlderThan(days: number): Promise<number> {
     const result = await this.db.run(
-      `DELETE FROM call_recordings WHERE started_at < NOW() - INTERVAL '${days} days'`
+      `DELETE FROM call_recordings WHERE started_at < EXTRACT(EPOCH FROM (NOW() - INTERVAL '${days} days'))::INTEGER`
     );
     if (result.rowCount > 0) {
       dbLogger.info(`Deleted ${result.rowCount} old recordings from database`);

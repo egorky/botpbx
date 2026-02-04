@@ -167,7 +167,7 @@ export class AIInsightsRepository {
   async deleteOlderThan(days: number): Promise<number> {
     const result = await this.db.run(`
       DELETE FROM ai_insights
-      WHERE generated_at < NOW() - INTERVAL '${days} days'
+      WHERE generated_at < EXTRACT(EPOCH FROM (NOW() - INTERVAL '${days} days'))::INTEGER
     `);
     return result.rowCount;
   }
@@ -189,7 +189,7 @@ export class AIInsightsRepository {
         COUNT(*) as count
       FROM ai_insights
       WHERE insight_type = 'intent'
-        AND generated_at >= NOW() - INTERVAL '${days} days'
+        AND generated_at >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '${days} days'))::INTEGER
       GROUP BY data->>'intent'
       ORDER BY count DESC
     `);
@@ -250,7 +250,8 @@ export class AIInsightsRepository {
 
       await this.db.run(`
         UPDATE ai_insights
-        SET data = $1, generated_at = NOW()
+        SET data = $1, generated_at = EXTRACT(EPOCH FROM NOW())::INTEGER
+        SET data = $1, generated_at = EXTRACT(EPOCH FROM NOW())::INTEGER
         WHERE id = $2
       `, [JSON.stringify(data), existing.id]);
 
