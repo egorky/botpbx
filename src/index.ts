@@ -445,7 +445,8 @@ async function main(): Promise<void> {
 
           // Redirect to AudioSocket application
           // The call will be handled by AudioSocket server with real-time audio streaming
-          await agi.exec('AudioSocket', '127.0.0.1:9092');
+          // Format: AudioSocket(<uuid>,<server:port>)
+          await agi.exec('AudioSocket', `${session.uniqueId},127.0.0.1:9092`);
 
           logger.info(`[AI Agent:${session.uniqueId}] Realtime call completed`);
           return;
