@@ -96,7 +96,15 @@ async function main(): Promise<void> {
     logger.info('Services initialized');
 
     // Get AI API keys from settings
+    // Note: Settings repo keys are lowercase snake_case in DB
     const openaiApiKey = (await settingsRepo.get('openai_api_key')) || process.env.OPENAI_API_KEY;
+
+    if (!openaiApiKey) {
+      logger.warn('OpenAI API Key is MISSING. Check "openai_api_key" in settings table or OPENAI_API_KEY env var.');
+    } else {
+      logger.info(`OpenAI API Key found (length: ${openaiApiKey.length})`);
+    }
+
     const anthropicApiKey = (await settingsRepo.get('anthropic_api_key')) || process.env.ANTHROPIC_API_KEY;
     const groqApiKey = (await settingsRepo.get('groq_api_key')) || process.env.GROQ_API_KEY;
     const deepgramApiKey = (await settingsRepo.get('deepgram_api_key')) || process.env.DEEPGRAM_API_KEY;
@@ -450,6 +458,18 @@ async function main(): Promise<void> {
         logger.info(`[AI Agent:${session.uniqueId}] Using file-based mode (standard)`);
 
         // Create conversation context
+        // If falling back from Realtime (openai_realtime), map parameters to standard OpenAI
+        let voiceProvider = agent.voice_provider;
+        let sttProvider = agent.stt_provider;
+
+        if (voiceProvider === 'openai_realtime') {
+          logger.info(`[AI Agent:${session.uniqueId}] Mapping 'openai_realtime' voice to 'openai' for fallback`);
+          voiceProvider = 'openai';
+        }
+        if (sttProvider === 'openai_realtime') {
+          sttProvider = 'whisper';
+        }
+
         const agentConfig: AIAgentConfig = {
           id: agent.id,
           name: agent.name,
@@ -457,8 +477,8 @@ async function main(): Promise<void> {
           greetingText: agent.greeting_text,
           llmProvider: agent.llm_provider as any,
           llmModel: agent.llm_model,
-          sttProvider: agent.stt_provider as any,
-          voiceProvider: agent.voice_provider,
+          sttProvider: sttProvider as any,
+          voiceProvider: voiceProvider,
           voiceId: agent.voice_id,
           language: agent.language,
           maxTurns: 10,
@@ -471,7 +491,7 @@ async function main(): Promise<void> {
         const greetingResult = await aiConversationService.generateTTS(
           agent.greeting_text,
           greetingPromptId,
-          agent.voice_provider,
+          voiceProvider,
           agent.voice_id
         );
 
