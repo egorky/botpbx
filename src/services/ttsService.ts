@@ -21,7 +21,7 @@ export interface PiperVoice {
   quality: string;
 }
 
-export type TTSProvider = 'piper' | 'kokoro' | 'elevenlabs' | 'openai' | 'cartesia' | 'deepgram' | 'playht' | 'google';
+export type TTSProvider = 'piper' | 'kokoro' | 'elevenlabs' | 'openai' | 'openai_realtime' | 'cartesia' | 'deepgram' | 'playht' | 'google';
 
 // OpenAI TTS voices
 export const OPENAI_TTS_VOICES = [
@@ -1152,6 +1152,7 @@ export class TTSService {
       case 'kokoro':
         return this.generateWithKokoro(text, promptId, options?.voice);
       case 'openai':
+      case 'openai_realtime':
         return this.generateWithOpenAI(text, promptId, options?.voice);
       case 'cartesia':
         return this.generateWithCartesia(text, promptId, options?.voice);
@@ -1229,7 +1230,7 @@ export class TTSService {
 
     // Set provider if specified
     if (options.provider) {
-      const validProviders = ['piper', 'kokoro', 'elevenlabs', 'openai', 'cartesia', 'deepgram', 'playht', 'google'] as const;
+      const validProviders = ['piper', 'kokoro', 'elevenlabs', 'openai', 'openai_realtime', 'cartesia', 'deepgram', 'playht', 'google'] as const;
       if (validProviders.includes(options.provider as TTSProvider)) {
         this.provider = options.provider as TTSProvider;
       }

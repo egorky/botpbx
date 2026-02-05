@@ -395,6 +395,8 @@ async function main(): Promise<void> {
           (agent.use_realtime || useRealtime === '1') &&
           agent.llm_provider === 'openai';
 
+        logger.info(`Realtime check: Service=${!!realtimeService}, AudioSocket=${!!audioSocketServer}, AgentRealtime=${agent.use_realtime}, VarRealtime=${useRealtime}, LLM=${agent.llm_provider} -> Result=${!!canUseRealtime}`);
+
         if (canUseRealtime) {
           // ============================================================
           // REAL-TIME MODE: Use OpenAI Realtime API via AudioSocket
