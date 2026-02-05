@@ -39,6 +39,7 @@ import { BrowserAudioServer } from './asterisk/browserAudioServer';
 import { FlowExecutionService } from './services/flowExecutionService';
 import OpenAI from 'openai';
 import { initPublicIP } from './utils/network';
+import { v4 as uuidv4 } from 'uuid';
 
 async function main(): Promise<void> {
   logger.info('='.repeat(50));
@@ -428,8 +429,12 @@ async function main(): Promise<void> {
 
           const realtimeVoice = voiceMap[agent.voice_id] || voiceMap['default'];
 
-          // Register agent config with AudioSocket server
-          audioSocketServer!.registerCallConfig(session.uniqueId, {
+          // Generate a valid UUID for AudioSocket (Asterisk requires standard UUID format)
+          const callUuid = uuidv4();
+          logger.info(`[AI Agent:${session.uniqueId}] Generated AudioSocket UUID: ${callUuid}`);
+
+          // Register agent config with AudioSocket server using the new UUID
+          audioSocketServer!.registerCallConfig(callUuid, {
             agentId: agent.id,
             agentName: agent.name,
             systemPrompt: agent.system_prompt,
@@ -446,7 +451,7 @@ async function main(): Promise<void> {
           // Redirect to AudioSocket application
           // The call will be handled by AudioSocket server with real-time audio streaming
           // Format: AudioSocket(<uuid>,<server:port>)
-          await agi.exec('AudioSocket', `${session.uniqueId},127.0.0.1:9092`);
+          await agi.exec('AudioSocket', `${callUuid},127.0.0.1:9092`);
 
           logger.info(`[AI Agent:${session.uniqueId}] Realtime call completed`);
           return;
